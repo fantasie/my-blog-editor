@@ -1,0 +1,31 @@
+{
+  "name": "node-md-editor",
+  "version": "1.0.0",
+  "description": "Realtime Markdown Editor",
+  "main": "server.js",
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/fantasie/node-md-editor.git"
+  },
+  "keywords": [
+    "markdown",
+    "editor"
+  ],
+  "author": "fantasie",
+  "bugs": {
+    "url": "https://github.com/fantasie/node-md-editor/issues"
+  },
+  "dependencies": {
+    "body-parser": "~1.15.0",
+    "connect-multiparty": "^2.0.0",
+    "ejs": "^2.4.1",
+    "express": "^4.13.4",
+    "imagemagick": "^0.1.3",
+    "ini": "^1.3.4"
+  },
+  "engines": {
+    "node": "0.10.x",
+    "npm": "1.3.x"
+  },
+  "homepage": "https://github.com/fantasie/node-md-editor#readme"
+}
