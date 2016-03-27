@@ -16,6 +16,7 @@
     "url": "https://github.com/fantasie/node-md-editor/issues"
   },
   "dependencies": {
+    "basic-auth-connect": "^1.0.0",
     "body-parser": "~1.15.0",
     "connect-multiparty": "^2.0.0",
     "ejs": "^2.4.1",

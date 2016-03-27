@@ -13,7 +13,7 @@
         <div class="upload">
             <form id="upload_form" method="post" enctype="multipart/form-data">
                 <input type=file name=uploadFile id=uploadFile />
-                <input type=hidden name=pass />
+                <input type=hidden name=msg />
             </form>
         </div>
         <div class="commands">
@@ -30,7 +30,7 @@
   <div id="menu">
     <div class="menu-title">Save to Server</div>
     <div id="saveas-markdown">
-      <input type=password class=pass id=pass>
+      <input type=text class=msg id=save_msg>
     </div>
     <a class="close" id="close-menu">&times;</a>
   </div>
@@ -38,7 +38,7 @@
   <div id="commit">
     <div class="menu-title">Commit to Server</div>
     <div id="request-commit">
-      <input type=password class=pass id=commit_pass>
+      <input type=text class=msg id=commit_msg>
     </div>
     <a class="close" id="close-commit">&times;</a>
   </div>
@@ -46,7 +46,7 @@
     <script src="https://cdn.rawgit.com/showdownjs/showdown/1.0.2/dist/showdown.min.js"></script>
     <script src="/script.js"></script>
     <script src="/jquery.min.js"></script>
-    <script src="./jquery.form.js"></script>
+    <script src="/jquery.form.js"></script>
     <input type="hidden" id="filename" value="<%= filename %>">
 </body>
 </html>

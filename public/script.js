@@ -65,8 +65,8 @@ window.onload = function() {
             menu.style.display = 'none';
         } else {
             menu.style.display = 'block';
-            document.getElementById('pass').value = "";
-            document.getElementById('pass').focus();
+            document.getElementById('save_msg').value = "";
+            document.getElementById('save_msg').focus();
         }
     }
 
@@ -75,8 +75,8 @@ window.onload = function() {
             commit.style.display = 'none';
         } else {
             commit.style.display = 'block';
-            document.getElementById('commit_pass').value = "";
-            document.getElementById('commit_pass').focus();
+            document.getElementById('commit_msg').value = "";
+            document.getElementById('commit_msg').focus();
         }
     }
 
@@ -109,10 +109,10 @@ window.onload = function() {
       }
     });
 
-    document.getElementById('pass').addEventListener('keydown', function(e){
+    document.getElementById('save_msg').addEventListener('keydown', function(e){
       if(e.keyCode == 13){
-        if (document.getElementById('pass').value) {
-            saveToServer(document.getElementById('pass').value);
+        if (document.getElementById('save_msg').value) {
+            saveToServer(document.getElementById('save_msg').value);
         }
         menu.style.display = 'none';
       }
@@ -120,9 +120,9 @@ window.onload = function() {
       return false;
     });
 
-    function saveToServer(pass) {
+    function saveToServer(msg) {
         var filename = document.getElementById('filename').value,
-            payload = "&pass=" + pass + "&data=" + encodeURIComponent(pad.value);
+            payload = "&msg=" + msg + "&data=" + encodeURIComponent(pad.value);
 
         $.ajax({
           type: 'POST',
@@ -134,7 +134,7 @@ window.onload = function() {
             if (uploadFile.value) {
               $('#upload_form').ajaxForm({
                   beforeSubmit: function(){
-                    document.getElementById('upload_form').pass.value = pass;
+                    document.getElementById('upload_form').msg.value = msg;
                     return true;
                 },
                 url: "/upload/" + filename,
@@ -142,6 +142,7 @@ window.onload = function() {
                 success: function (response) {
                   alert("file upload success.");
                   pad.value = pad.value + JSON.parse(response).content;
+                  uploadFile.value = "";
                   convertTextAreaToMarkdown();
                 },
                 error: function (response, status) {
@@ -162,10 +163,10 @@ window.onload = function() {
         });
     }
  
-    document.getElementById('commit_pass').addEventListener('keydown', function(e){
+    document.getElementById('commit_msg').addEventListener('keydown', function(e){
       if(e.keyCode == 13){
-        if (document.getElementById('commit_pass').value) {
-            commitToServer(document.getElementById('commit_pass').value);
+        if (document.getElementById('commit_msg').value) {
+            commitToServer(document.getElementById('commit_msg').value);
         }
         commit.style.display = 'none';
       }
@@ -174,10 +175,10 @@ window.onload = function() {
     });
 
 
-    function commitToServer(pass) {
+    function commitToServer(msg) {
         var filename = document.getElementById('filename').value,
             postUrl = "/commit/",
-            payload = "&pass=" + pass;
+            payload = "&msg=" + msg;
 
         $.ajax({
           type: 'POST',
