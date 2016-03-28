@@ -58,15 +58,17 @@ app.get('/new/', function(req, res) {
 app.get('/edit/:filename', function(req, res) {
 	console.log("[" + new Date() + "] /edit/ : " + req.params.filename);
 
-	var file = config.GIT_REPO + "/" + config.POST_DIR + "/" + req.params.filename;
+	var file = config.GIT_REPO + "/" + config.POST_DIR + "/" + req.params.filename,
+		content;
+
 	if (!fs.existsSync(file)) {
-		console.log("file read error. ");
-		res.status(404).send('Failed to read');	
-		return;
+		console.log("create new file.");
+		content = "---\nlayout: post\ntitle: \ncategory: diary\ntags: []\n\n---\n\n<!-- more -->\n";
+	} else {
+		content = fs.readFileSync(file, 'utf8');
 	}
 
-	var content = fs.readFileSync(file, 'utf8');
-		res.render('pad', {content: content, filename: req.params.filename});
+	res.render('pad', {content: content, filename: req.params.filename});
 });
 
 // save existing file
