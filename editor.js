@@ -1,4 +1,4 @@
-/* server.js */
+/* editor.js */
 
 var express = require('express');
 var basicAuth = require('basic-auth-connect');
@@ -11,6 +11,7 @@ var config = require('ini').parse(fs.readFileSync(configFilePath, 'utf-8'));
 var multipart = require('connect-multiparty');
 var im = require('imagemagick');
 var multipartMiddleware = multipart();
+var log4js = require('log4js');
 var app = express();
 
 // set the view engine to ejs
@@ -33,6 +34,10 @@ app.use(function(req, res, next) {
 	next();
 });
 
+// global
+var logger = log4js.getLogger("editor.js");
+var DEFAULT_COMMIT_MSG = "modify posts";
+
 // edit new file
 app.get('/new/', function(req, res) {
 	var dt = new Date();
@@ -40,30 +45,30 @@ app.get('/new/', function(req, res) {
 		month = dt.getMonth()+1,
 		day = dt.getDate();
 
-	var content = "---\nlayout: post\ntitle: " + year + "년 " + month + "월 " + day + "일의 일상\ncategory: diary\ntags: []\n\n---\n\n<!-- more -->\n";
+	var content = "---\nlayout: post\ntitle: " + year + "년 " + month + "월 " + day + "일의 일상\ncategory: diary\ntags: []\nalign: left\n\n---\n\n<!-- more -->\n";
 
 	if (month < 10) {
 		month = "0" + month;
 	}
+
 	if (day < 10) {
 		day = "0" + day;
 	}
 
 	var filename = year + "-" + month + "-" + day + "-" + "diary.md";
-
-	console.log("[" + dt + "] /new/ : " + filename);
+	logger.info("/new/ : " + filename);
 	res.render('pad', {content: content, filename: filename});
 });
 
 // edit existing file
 app.get('/edit/:filename', function(req, res) {
-	console.log("[" + new Date() + "] /edit/ : " + req.params.filename);
+	logger.info("/edit/ : " + req.params.filename);
 
 	var file = config.GIT_REPO + "/" + config.POST_DIR + "/" + req.params.filename,
 		content;
 
 	if (!fs.existsSync(file)) {
-		console.log("create new file.");
+		logger.info("create new file.");
 		content = "---\nlayout: post\ntitle: \ncategory: diary\ntags: []\n\n---\n\n<!-- more -->\n";
 	} else {
 		content = fs.readFileSync(file, 'utf8');
@@ -74,24 +79,24 @@ app.get('/edit/:filename', function(req, res) {
 
 // save existing file
 app.post('/save/:filename', function(req, res) {
-	console.log("[" + new Date() + "] /save/ : " + req.params.filename);
+	logger.info("/save/ : " + req.params.filename);
 
 	var filename = req.params.filename,
 		data = req.body.data;
 
 	if (!data) {
-		console.log("save error. ");
+		logger.info("save error. ");
 		res.status(404).send('Failed to save');
 		return;
 	}
-	
+
 	fs.writeFile(config.GIT_REPO + "/" + config.POST_DIR + "/" + filename, data, function(err) {
 		if (err) {
 			res.status(404).send('Failed to save');
 			throw err;
 		}
 
-		console.log(filename + ': write completed.');
+		logger.info(filename + ': write completed.');
 
 		var response = {
 			message: "success"
@@ -103,13 +108,13 @@ app.post('/save/:filename', function(req, res) {
 
 // upload attached file
 app.post('/upload/:filename', multipartMiddleware, function(req, res) {
-	console.log("[" + new Date() + "] /upload/ : " + req.params.filename);
+	logger.info("/upload/ : " + req.params.filename);
 
 	var filename = req.params.filename,
 		file = req.files.uploadFile;
 
 	if (!file) {
-		console.log("upload error. ");
+		logger.info("upload error. ");
 		res.status(404).send('Failed to upload');
 		return;
 	}
@@ -129,7 +134,7 @@ app.post('/upload/:filename', multipartMiddleware, function(req, res) {
 			}
 
 			var response = {
-				message: "success",
+				message: "save success",
 				content: "\n\n![](__imgUrl__" + "/" + file.originalFilename + ")"
 			};
 
@@ -140,20 +145,24 @@ app.post('/upload/:filename', multipartMiddleware, function(req, res) {
 
 // deploy
 app.post('/deploy', function(req, res) {
-	console.log("[" + new Date() + "] /deploy/ ");
+	logger.info("/deploy/ ");
 
 	var shellCommand = __dirname + '/../blog_deploy.sh';
 	exec(shellCommand, function (error, stdout, stderr) {
 		if (error) {
-			console.log('[!] Error running shell script: ' + error);
+			logger.info('[!] Error running shell script: ' + error);
 			res.status(404).send('Failed to deploy');
 			return;
 		}
 
-		console.log("[" + new Date() + "] deploy complete.");
-		
+		if (stdout) {
+			logger.info(stdout);
+		}
+
+		logger.info("deploy complete.");
+
 		var response = {
-			message: "success"
+			message: "deploy success"
 		}
 
 		res.send(JSON.stringify(response));
@@ -162,26 +171,39 @@ app.post('/deploy', function(req, res) {
 
 // commit and push to git repository
 app.post('/commit', function(req, res) {
-	console.log("[" + new Date() + "] /commit/ ");
+	logger.info("/commit/ ");
 
-		var shellCommand = __dirname + '/commit.sh';
-		shellCommand += ' --config \'' + configFilePath + '\'';
-		console.log(shellCommand);
-		exec(shellCommand, function (error, stdout, stderr) {
-			if (error) {
-				console.log('[!] Error running shell script: ' + error);
-				res.status(404).send('Failed to commit');
-				return;
-			}
+	var shellCommand = __dirname + '/commit.sh';
+	shellCommand += ' --config \'' + configFilePath + '\'';
 
-			console.log("[" + new Date() + "] commit complete.");
+	var commitMsg = DEFAULT_COMMIT_MSG;
+	if (req.body.msg) {
+		commitMsg = req.body.msg;
+		shellCommand += ' --amend 1';
+	}
 
-			var response = {
-				message: "success"
-			}
+	shellCommand += ' --commit_msg \'' + commitMsg + '\'';
 
-			res.send(JSON.stringify(response));
-		});
+	logger.info(shellCommand);
+	exec(shellCommand, function (error, stdout, stderr) {
+		if (error) {
+			logger.info('[!] Error running shell script: ' + error);
+			res.status(404).send('Failed to commit');
+			return;
+		}
+
+		if (stdout) {
+			logger.info(stdout);
+		}
+
+		logger.info("commit complete.");
+
+		var response = {
+			message: "commit success"
+		}
+
+		res.send(JSON.stringify(response));
+	});
 });
 
 // listen

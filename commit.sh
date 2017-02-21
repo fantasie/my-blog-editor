@@ -2,10 +2,17 @@
 while [[ $# > 1 ]]
 do
 key="$1"
-echo $1
 case $key in
     -c|--config)
     CONFIG_FILE="$2"
+    shift
+    ;;
+    --commit_msg)
+    COMMIT_MESSAGE="$2"
+    shift
+    ;;
+    --amend)
+    IS_AMEND="$2"
     shift
     ;;
     --default)
@@ -19,7 +26,8 @@ shift
 done
 
 if [[ -z ${CONFIG_FILE} ]];then
-  exit 1;
+    echo "config file does not exist.";
+    exit 1;
 fi
 
 # Read config file
@@ -45,5 +53,13 @@ jekyll build >> ~/logs/commit_build.log
 cd _site
 
 git add .
-git commit -m "${GIT_COMMIT_MESSAGE}"
-git push ${GIT_ORIGIN} master
+
+echo "> commit msg: ${COMMIT_MESSAGE}"
+echo "> amend: ${IS_AMEND}"
+if (( ${IS_AMEND} == 1 ));then
+    git commit --amend -m "${COMMIT_MESSAGE}"
+    git push -f ${GIT_ORIGIN} master
+else
+    git commit -m "${COMMIT_MESSAGE}"
+    git push ${GIT_ORIGIN} master
+fi
