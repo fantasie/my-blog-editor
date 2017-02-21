@@ -1,71 +1,112 @@
 /* public/script.js */
 
 window.onload = function() {
-    var converter = new showdown.Converter();
-    var pad = document.getElementById('pad');
-    var markdownArea = document.getElementById('markdown');
-    var menu = document.getElementById('menu');
-    var commit = document.getElementById('commit');
-    var deploy = document.getElementById('deploy');
-    var uploadFile = document.getElementById('uploadFile');
+    // Because highlight.js is a bit awkward at times
+    var languageOverrides = {
+        js: 'javascript',
+        html: 'xml'
+    };
 
-    // make the tab act like a tab
-    pad.addEventListener('keydown',function(e) {
-        if(e.keyCode === 9) { // tab was pressed
-            // get caret position/selection
-            var start = this.selectionStart;
-            var end = this.selectionEnd;
+    emojify.setConfig({ img_dir: document.getElementById('emoji_dir').value });
 
-            var target = e.target;
-            var value = target.value;
-
-            // set textarea value to: text before caret + tab + text after caret
-            target.value = value.substring(0, start)
-            + "\t"
-            + value.substring(end);
-
-            // put caret at right position again (add one for the tab)
-            this.selectionStart = this.selectionEnd = start + 1;
-
-            // prevent the focus lose
-            e.preventDefault();
+    var md = markdownit({
+        html: true,
+        highlight: function(code, lang) {
+            if(languageOverrides[lang]) lang = languageOverrides[lang];
+            if(lang && hljs.getLanguage(lang)) {
+                try {
+                    return hljs.highlight(lang, code).value;
+                }catch(e) {}
+            }
+            return '';
         }
+    })
+    .use(markdownitFootnote);
+
+    function update(e) {
+        setOutput(e.getValue());
+    }
+
+    function setOutput(val) {
+        val = val.replace(/<equation>((.*?\n)*?.*?)<\/equation>/ig, function(a, b) {
+            return '<img src="http://latex.codecogs.com/png.latex?' + encodeURIComponent(b) + '" />';
+        });
+
+        var out = document.getElementById('out');
+        var old = out.cloneNode(true);
+        out.innerHTML = md.render(val);
+        emojify.run(out);
+
+        var outVal = out.innerHTML,
+            imageDir = document.getElementById('image_dir').value;
+
+        outVal = outVal.replace(/__imgUrl__/ig, imageDir);
+        out.innerHTML = md.render(outVal);
+
+        var allold = old.getElementsByTagName("*");
+        if (allold === undefined) return;
+
+        var allnew = out.getElementsByTagName("*");
+        if (allnew === undefined) return;
+
+        for (var i = 0, max = Math.min(allold.length, allnew.length); i < max; i++) {
+            if (!allold[i].isEqualNode(allnew[i])) {
+                out.scrollTop = allnew[i].offsetTop;
+                return;
+            }
+        }
+    }
+
+    var editor = CodeMirror.fromTextArea(document.getElementById('code'), {
+        mode: 'gfm',
+        lineNumbers: false,
+        matchBrackets: true,
+        lineWrapping: true,
+        theme: 'base16-light',
+        extraKeys: {"Enter": "newlineAndIndentContinueMarkdownList"}
     });
 
-    document.addEventListener('drop', function(e){
+    editor.on('change', update);
+
+    document.addEventListener('drop', function(e) {
         e.preventDefault();
         e.stopPropagation();
 
         var reader = new FileReader();
-        reader.onload = function(e){
-            pad.value = e.target.result;
+        reader.onload = function(e) {
+            editor.setValue(e.target.result);
         };
 
         reader.readAsText(e.dataTransfer.files[0]);
     }, false);
 
-    function saveAsFile(code, name) {
+    function saveAsMarkdownFile(code, name) {
         var blob = new Blob([code], { type: 'text/plain' });
         if (window.saveAs) {
             window.saveAs(blob, name);
         } else if (navigator.saveBlob) {
             navigator.saveBlob(blob, name);
-        } else {
+        } else{
             url = URL.createObjectURL(blob);
             var link = document.createElement("a");
-            link.setAttribute("href", url);
-            link.setAttribute("download", name);
+            link.setAttribute("href",url);
+            link.setAttribute("download",name);
             var event = document.createEvent('MouseEvents');
             event.initMouseEvent('click', true, true, window, 1, 0, 0, 0, 0, false, false, false, false, 0, null);
             link.dispatchEvent(event);
         }
     }
 
-    function toggleMenu() {
-        if (menu.style.display == 'block') {
-            menu.style.display = 'none';
+    var save = document.getElementById('save');
+    var commit = document.getElementById('commit');
+    var deploy = document.getElementById('deploy');
+    var uploadFile = document.getElementById('uploadFile');
+
+    function toggleSave() {
+        if (save.style.display == 'block') {
+            save.style.display = 'none';
         } else {
-            menu.style.display = 'block';
+            save.style.display = 'block';
             document.getElementById('save_msg').value = "";
             document.getElementById('save_msg').focus();
         }
@@ -91,37 +132,37 @@ window.onload = function() {
         }
     }
 
-    document.getElementById('download').addEventListener('click', function(){
+    document.getElementById('download').addEventListener('click', function() {
         var filename = document.getElementById('filename').value;
-        saveAsFile(pad.value, filename);
+        saveAsMarkdownFile(editor.getValue(), filename);
     });
 
-    document.getElementById('toggle-menu').addEventListener('click', toggleMenu);
-    document.getElementById('close-menu').addEventListener('click', function(){
-        menu.style.display = 'none';
+    document.getElementById('toggle-save').addEventListener('click', toggleSave);
+    document.getElementById('close-save').addEventListener('click', function() {
+        save.style.display = 'none';
     });
 
     document.getElementById('toggle-commit').addEventListener('click', toggleCommit);
-    document.getElementById('close-commit').addEventListener('click', function(){
+    document.getElementById('close-commit').addEventListener('click', function() {
         commit.style.display = 'none';
     });
 
     document.getElementById('toggle-deploy').addEventListener('click', toggleDeploy);
-    document.getElementById('close-deploy').addEventListener('click', function(){
+    document.getElementById('close-deploy').addEventListener('click', function() {
         deploy.style.display = 'none';
     });
 
-    document.addEventListener('keydown', function(e){
-        if(e.keyCode == 83 && (e.ctrlKey || e.metaKey)){
-            toggleMenu();
+    document.addEventListener('keydown', function(e) {
+        if(e.keyCode == 83 && (e.ctrlKey || e.metaKey)) {
+            toggleSave();
 
             e.preventDefault();
             return false;
         }
 
-        if(e.keyCode === 27){
-            if (menu.style.display == 'block') {
-                menu.style.display = 'none';
+        if(e.keyCode === 27) {
+            if (save.style.display == 'block') {
+                save.style.display = 'none';
             }
 
             if (commit.style.display == 'block') {
@@ -137,13 +178,13 @@ window.onload = function() {
         }
     });
 
-    document.getElementById('save_msg').addEventListener('keydown', function(e){
-        if(e.keyCode == 13){
+    document.getElementById('save_msg').addEventListener('keydown', function(e) {
+        if(e.keyCode == 13) {
             if (!document.getElementById('save_msg').value) {
                 alert("input the save message");
             } else {
                 saveToServer(document.getElementById('save_msg').value);
-                menu.style.display = 'none';
+                save.style.display = 'none';
             }
         }
 
@@ -152,7 +193,7 @@ window.onload = function() {
 
     function saveToServer(msg) {
         var filename = document.getElementById('filename').value,
-        payload = "&msg=" + msg + "&data=" + encodeURIComponent(pad.value);
+        payload = "&msg=" + msg + "&data=" + encodeURIComponent(editor.getValue());
 
         $.ajax({
             type: 'POST',
@@ -163,7 +204,7 @@ window.onload = function() {
 
                 if (uploadFile.value) {
                     $('#upload_form').ajaxForm({
-                        beforeSubmit: function(){
+                        beforeSubmit: function() {
                             document.getElementById('upload_form').msg.value = msg;
                             return true;
                         },
@@ -171,17 +212,17 @@ window.onload = function() {
                         dataType:'text',
                         success: function (response) {
                             alert("file upload success.");
-                            pad.value = pad.value + JSON.parse(response).content;
+                            editor.setValue(editor.getValue() + JSON.parse(response).content);
                             uploadFile.value = "";
-                            convertTextAreaToMarkdown();
+                            update(editor);
                         },
                         error: function (response, status) {
                             alert("file upload error: " + status);
                         },
-                        beforeSend:function(){
+                        beforeSend:function() {
 
                         },
-                        complete:function(){
+                        complete:function() {
                         }
                     }).submit();
 
@@ -193,8 +234,8 @@ window.onload = function() {
         });
     }
 
-    document.getElementById('commit_msg').addEventListener('keydown', function(e){
-        if(e.keyCode == 13){
+    document.getElementById('commit_msg').addEventListener('keydown', function(e) {
+        if(e.keyCode == 13) {
             if (!document.getElementById('deploy_msg').value) {
                 var result = confirm("Do you want really amend commit with default commit message?");
                 if (result) {
@@ -227,8 +268,8 @@ window.onload = function() {
         });
     }
 
-    document.getElementById('deploy_msg').addEventListener('keydown', function(e){
-        if(e.keyCode == 13){
+    document.getElementById('deploy_msg').addEventListener('keydown', function(e) {
+        if(e.keyCode == 13) {
             deployToServer(document.getElementById('deploy_msg').value);
             deploy.style.display = 'none';
         }
@@ -255,34 +296,6 @@ window.onload = function() {
         });
     }
 
-    var previousMarkdownValue;
-
-    // convert text area to markdown html
-    var convertTextAreaToMarkdown = function(){
-        var markdownText = pad.value;
-        previousMarkdownValue = markdownText;
-        html = converter.makeHtml(markdownText);
-        markdownArea.innerHTML = html;
-    };
-
-    var didChangeOccur = function(){
-        if(previousMarkdownValue != pad.value){
-            return true;
-        }
-        return false;
-    };
-
-    // check every second if the text area has changed
-    setInterval(function(){
-        if(didChangeOccur()){
-            convertTextAreaToMarkdown();
-        }
-    }, 1000);
-
-    // convert textarea on input change
-    pad.addEventListener('input', convertTextAreaToMarkdown);
-
-    // convert on page load
-    convertTextAreaToMarkdown();
-    pad.focus();
+    update(editor);
+    editor.focus();
 };

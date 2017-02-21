@@ -45,8 +45,6 @@ app.get('/new/', function(req, res) {
 		month = dt.getMonth()+1,
 		day = dt.getDate();
 
-	var content = "---\nlayout: post\ntitle: " + year + "년 " + month + "월 " + day + "일의 일상\ncategory: diary\ntags: []\nalign: left\n\n---\n\n<!-- more -->\n";
-
 	if (month < 10) {
 		month = "0" + month;
 	}
@@ -55,26 +53,31 @@ app.get('/new/', function(req, res) {
 		day = "0" + day;
 	}
 
-	var filename = year + "-" + month + "-" + day + "-" + "diary.md";
+	var filename = year + "-" + month + "-" + day + "-" + "diary.md",
+	 	content = "---\nlayout: post\ntitle: " + year + "년 " + month + "월 " + day + "일의 일상\ncategory: diary\ntags: []\nalign: left\n\n---\n\n<!-- more -->\n";
 	logger.info("/new/ : " + filename);
-	res.render('pad', {content: content, filename: filename});
+
+	var imgDir = getImageDir(filename);
+	res.render('pad', {content: content, filename: filename, emojiDir: config.EMOJI_DIR, imgDir: imgDir});
 });
 
 // edit existing file
 app.get('/edit/:filename', function(req, res) {
-	logger.info("/edit/ : " + req.params.filename);
+	var filename = req.params.filename;
+	logger.info("/edit/ : " + filename);
 
-	var file = config.GIT_REPO + "/" + config.POST_DIR + "/" + req.params.filename,
+	var file = config.GIT_REPO + "/" + config.POST_DIR + "/" + filename,
 		content;
 
 	if (!fs.existsSync(file)) {
 		logger.info("create new file.");
-		content = "---\nlayout: post\ntitle: \ncategory: diary\ntags: []\n\n---\n\n<!-- more -->\n";
+		content = "---\nlayout: post\ntitle: \ncategory: diary\ntags: []\nalign: left\n\n---\n\n<!-- more -->\n";
 	} else {
 		content = fs.readFileSync(file, 'utf8');
 	}
 
-	res.render('pad', {content: content, filename: req.params.filename});
+	var imgDir = getImageDir(filename);
+	res.render('pad', {content: content, filename: filename, emojiDir: config.EMOJI_DIR, imageDir: imgDir});
 });
 
 // save existing file
@@ -119,7 +122,7 @@ app.post('/upload/:filename', multipartMiddleware, function(req, res) {
 		return;
 	}
 
-	var uploadPath = config.GIT_REPO + "/assets/" + filename.substring(0, filename.length-3);
+	var uploadPath = getImageDir(filename);
 
 	if (!fs.existsSync(uploadPath)) {
 		fs.mkdirSync(uploadPath);
@@ -205,6 +208,11 @@ app.post('/commit', function(req, res) {
 		res.send(JSON.stringify(response));
 	});
 });
+
+function getImageDir(filename) {
+	var imgDir = config.GIT_REPO + "/assets/" + filename.substring(0, filename.length-3);
+	return imgDir;
+}
 
 // listen
 var port = config.SERVER_PORT;

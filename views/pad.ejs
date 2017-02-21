@@ -1,11 +1,29 @@
-<!-- views/pad.ejs -->
+<!-- view/pad.ejs -->
 
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Markdown Editor</title>
-    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css" rel="stylesheet">
-    <link href="/style.css" rel="stylesheet">
+    <title>Markdown Editor :-)</title>
+    <script src="/js/markdown-it.js"></script>
+    <script src="/js/markdown-it-footnote.js"></script>
+    <script src="/js/highlight.pack.js"></script>
+    <script src="/js/emojify.js"></script>
+    <script src="/codemirror/lib/codemirror.js"></script>
+    <script src="/codemirror/overlay.js"></script>
+    <script src="/codemirror/xml/xml.js"></script>
+    <script src="/codemirror/markdown/markdown.js"></script>
+    <script src="/codemirror/gfm/gfm.js"></script>
+    <script src="/codemirror/javascript/javascript.js"></script>
+    <script src="/codemirror/css/css.js"></script>
+    <script src="/codemirror/htmlmixed/htmlmixed.js"></script>
+    <script src="/codemirror/lib/util/continuelist.js"></script>
+    <script src="/js/script.js"></script>
+    <script src="/js/jquery.min.js"></script>
+    <script src="/js/jquery.form.js"></script>
+    <link rel="stylesheet" href="/codemirror/lib/codemirror.css">
+    <link rel="stylesheet" href="/css/base16-light.css">
+    <link rel="stylesheet" href="/css/default.css">
+    <link rel="stylesheet" href="/css/style.css">
 </head>
 
 <body>
@@ -18,45 +36,43 @@
         </div>
         <div class="commands">
             <span><a href=# id="download">DOWNLOAD</a></span>
-            <span><a href=# id="toggle-menu">SAVE</a></span>
+            <span><a href=# id="toggle-save">SAVE</a></span>
             <span><a href=# id="toggle-deploy">DEPLOY</a></span>
-			<span><a href=# id="toggle-commit">COMMIT</a></span>
+            <span><a href=# id="toggle-commit">COMMIT</a></span>
         </div>
     </section>
 
     <section class="row">
-        <textarea class="col-md-6 full-height" id="pad"><%= content %></textarea>
-        <div class="col-md-6 full-height" id="markdown"></div>
+        <div id="in"><form><textarea id="code"><%= content %></textarea></form></div>
+        <div id="out"></div>
     </section>
 
-  <div id="menu" class="menu">
-    <div class="menu-title">Save to Server</div>
-    <div id="saveas-markdown">
-      <input type=text class=msg id=save_msg>
+    <div id="save" class="menu">
+        <div class="menu-title">Save to Server</div>
+        <div>
+            <input type=text class=msg id=save_msg>
+        </div>
+        <a class="close" id="close-save">&times;</a>
     </div>
-    <a class="close" id="close-menu">&times;</a>
-  </div>
 
-  <div id="commit" class="menu">
-    <div class="menu-title">Commit to Server</div>
-    <div id="request-commit">
-      <input type=text class=msg id=commit_msg>
+    <div id="commit" class="menu">
+        <div class="menu-title">Commit to Server</div>
+        <div>
+            <input type=text class=msg id=commit_msg>
+        </div>
+        <a class="close" id="close-commit">&times;</a>
     </div>
-    <a class="close" id="close-commit">&times;</a>
-  </div>
 
-  <div id="deploy" class="menu">
-    <div class="menu-title">Deploy to server</div>
-	<div id="request-deploy">
-		<input type=text class=msg id=deploy_msg>
-	</div>
-	<a class="close" id="close-deploy">&times;</a>
-  </div>
+    <div id="deploy" class="menu">
+        <div class="menu-title">Deploy to server</div>
+        <div>
+            <input type=text class=msg id=deploy_msg>
+        </div>
+        <a class="close" id="close-deploy">&times;</a>
+    </div>
 
-    <script src="https://cdn.rawgit.com/showdownjs/showdown/1.0.2/dist/showdown.min.js"></script>
-    <script src="/script.js"></script>
-    <script src="/jquery.min.js"></script>
-    <script src="/jquery.form.js"></script>
     <input type="hidden" id="filename" value="<%= filename %>">
+    <input type="hidden" id="image_dir" value="<%= imageDir %>">
+    <input type="hidden" id="emoji_dir" value="<%= emojiDir %>">
 </body>
 </html>
