@@ -35,7 +35,7 @@ section {
 }
 
 #in{
-    position: fixed;
+    position: absolute;
     top: 46px;
     left: 0;
     bottom: 0;
@@ -64,7 +64,7 @@ section {
 }
 
 #out{
-    position: fixed;
+    position: absolute;
     top: 46px;
     left: 50%;
     width: 50%;
@@ -127,16 +127,6 @@ section {
     width: 1em;
     height: 1em;
     vertical-align: baseline;
-}
-
-@media screen and (max-width: 1024px) {
-    #in {
-        display: none;
-    }
-    #out {
-        left: 0;
-        padding-left: 10px;
-    }
 }
 
 .cm-header-1 { font-size: 2em; }

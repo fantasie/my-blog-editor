@@ -57,8 +57,8 @@ app.get('/new/', function(req, res) {
 	 	content = "---\nlayout: post\ntitle: " + year + "년 " + month + "월 " + day + "일의 일상\ncategory: diary\ntags: []\nalign: left\n\n---\n\n<!-- more -->\n";
 	logger.info("/new/ : " + filename);
 
-	var imgDir = getImageDir(filename);
-	res.render('pad', {content: content, filename: filename, emojiDir: config.EMOJI_DIR, imgDir: imgDir});
+	var imageDir = getImageDir(filename);
+	res.render('pad', {content: content, filename: filename, emojiDir: config.EMOJI_DIR, imageDir: imageDir});
 });
 
 // edit existing file
@@ -76,8 +76,8 @@ app.get('/edit/:filename', function(req, res) {
 		content = fs.readFileSync(file, 'utf8');
 	}
 
-	var imgDir = getImageDir(filename);
-	res.render('pad', {content: content, filename: filename, emojiDir: config.EMOJI_DIR, imageDir: imgDir});
+	var imageDir = getImageDir(filename);
+	res.render('pad', {content: content, filename: filename, emojiDir: config.EMOJI_DIR, imageDir: imageDir});
 });
 
 // save existing file
@@ -217,3 +217,7 @@ function getImageDir(filename) {
 // listen
 var port = config.SERVER_PORT;
 app.listen(port);
+
+logger.debug("===================================");
+logger.debug("server start...");
+logger.debug("===================================")

@@ -5,7 +5,10 @@ window.onload = function() {
     var languageOverrides = {
         js: 'javascript',
         html: 'xml'
-    };
+   	 };
+
+	// TODO use config file
+	var HOME_URL = "http://so-blog.net/";
 
     emojify.setConfig({ img_dir: document.getElementById('emoji_dir').value });
 
@@ -131,6 +134,15 @@ window.onload = function() {
             document.getElementById('deploy_msg').focus();
         }
     }
+
+	document.getElementById('back').addEventListener('click', function() {
+		var filename = document.getElementById('filename').value,
+			re = /(\d{4})-(\d{2})-(\d{2})-(.+).md/g,
+			match = re.exec(filename);
+
+		var url = HOME_URL + "/" +  match[1] + "/" + match[2] + "/" + match[3] + "/" + match[4];
+		document.location.href = url;
+	});
 
     document.getElementById('download').addEventListener('click', function() {
         var filename = document.getElementById('filename').value;
