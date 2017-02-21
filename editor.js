@@ -122,7 +122,7 @@ app.post('/upload/:filename', multipartMiddleware, function(req, res) {
 		return;
 	}
 
-	var uploadPath = getImageDir(filename);
+	var uploadPath = config.GIT_REPO + "/assets/" + filename.substring(0, filename.length-3);;
 
 	if (!fs.existsSync(uploadPath)) {
 		fs.mkdirSync(uploadPath);
@@ -210,7 +210,7 @@ app.post('/commit', function(req, res) {
 });
 
 function getImageDir(filename) {
-	var imgDir = config.GIT_REPO + "/assets/" + filename.substring(0, filename.length-3);
+	var imgDir = config.IMAGE_DIR + "/" + filename.substring(0, filename.length-3);
 	return imgDir;
 }
 
