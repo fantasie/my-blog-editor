@@ -6,7 +6,7 @@ var fs = require('fs');
 var exec = require('child_process').exec;
 var bodyParser = require('body-parser');
 var crypto = require('crypto');
-var configFilePath = 'config';
+var configFilePath = __dirname + '/config';
 var config = require('ini').parse(fs.readFileSync(configFilePath, 'utf-8'));
 var multipart = require('connect-multiparty');
 var im = require('imagemagick');
@@ -15,6 +15,7 @@ var app = express();
 
 // set the view engine to ejs
 app.set('view engine', 'ejs');
+app.set('views', __dirname + '/views');
 
 // authentication
 app.use(basicAuth(config.LOGIN_ID, config.LOGIN_PASS));
@@ -137,13 +138,35 @@ app.post('/upload/:filename', multipartMiddleware, function(req, res) {
 	});
 });
 
+// deploy
+app.post('/deploy', function(req, res) {
+	console.log("[" + new Date() + "] /deploy/ ");
+
+	var shellCommand = __dirname + '/../blog_deploy.sh';
+	exec(shellCommand, function (error, stdout, stderr) {
+		if (error) {
+			console.log('[!] Error running shell script: ' + error);
+			res.status(404).send('Failed to deploy');
+			return;
+		}
+
+		console.log("[" + new Date() + "] deploy complete.");
+		
+		var response = {
+			message: "success"
+		}
+
+		res.send(JSON.stringify(response));
+	});
+});
+
 // commit and push to git repository
 app.post('/commit', function(req, res) {
 	console.log("[" + new Date() + "] /commit/ ");
 
-		var shellCommand = './commit.sh';
+		var shellCommand = __dirname + '/commit.sh';
 		shellCommand += ' --config \'' + configFilePath + '\'';
-
+		console.log(shellCommand);
 		exec(shellCommand, function (error, stdout, stderr) {
 			if (error) {
 				console.log('[!] Error running shell script: ' + error);

@@ -61,7 +61,7 @@ section {
 /* ------------------------------ */
 /*                menu            */
 /* ------------------------------ */
-#menu {
+.menu {
     display: none;
     position: fixed;
     background-color: #111;

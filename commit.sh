@@ -18,6 +18,10 @@ esac
 shift
 done
 
+if [[ -z ${CONFIG_FILE} ]];then
+  exit 1;
+fi
+
 # Read config file
 source ${CONFIG_FILE}
 
@@ -36,11 +40,10 @@ git pull ${GIT_ORIGIN} master
 cd ..
 
 git pull ${GIT_ORIGIN} source
-jekyll build
+jekyll build >> ~/logs/commit_build.log
 
 cd _site
 
-echo $GIT_ORIGIN
 git add .
 git commit -m "${GIT_COMMIT_MESSAGE}"
 git push ${GIT_ORIGIN} master

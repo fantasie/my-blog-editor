@@ -6,6 +6,7 @@ window.onload = function() {
     var markdownArea = document.getElementById('markdown'); 
     var menu = document.getElementById('menu');
     var commit = document.getElementById('commit');
+	var deploy = document.getElementById('deploy');
     var uploadFile = document.getElementById('uploadFile');
 
     // make the tab act like a tab
@@ -80,6 +81,16 @@ window.onload = function() {
         }
     }
 
+	function toggleDeploy() {
+		if (deploy.style.display == 'block') {
+			deploy.style.display = 'none';
+		} else {
+			deploy.style.display = 'block';
+			document.getElementById('deploy_msg').value = "";
+			document.getElementById('deploy_msg').focus();
+		}
+	}
+
     document.getElementById('toggle-menu').addEventListener('click', toggleMenu);
 
     document.getElementById('close-menu').addEventListener('click', function(){
@@ -91,6 +102,12 @@ window.onload = function() {
     document.getElementById('close-commit').addEventListener('click', function(){
       commit.style.display = 'none';
     });
+
+	document.getElementById('toggle-deploy').addEventListener('click', toggleDeploy);
+
+	document.getElementById('close-deploy').addEventListener('click', function(){
+		deploy.style.display = 'none';
+	});
 
     document.addEventListener('keydown', function(e){
       if(e.keyCode == 83 && (e.ctrlKey || e.metaKey)){
@@ -104,6 +121,15 @@ window.onload = function() {
         if (menu.style.display == 'block') {
             menu.style.display = 'none';
         }
+
+		if (commit.style.display == 'block') {
+			commit.style.display = 'none';
+		}
+
+		if (deploy.style.display == 'block') {
+			deploy.style.display = 'none';
+		}
+
         e.preventDefault();
         return false;
       }
@@ -178,6 +204,36 @@ window.onload = function() {
     function commitToServer(msg) {
         var filename = document.getElementById('filename').value,
             postUrl = "/commit/",
+            payload = "&msg=" + msg;
+
+        $.ajax({
+          type: 'POST',
+          url: postUrl,
+          data: payload,
+          success: function (response) {
+            alert("save success.");
+          },
+          error: function (response, status) {
+            alert("save error: " + status);
+          }
+        });
+    }
+
+    document.getElementById('deploy_msg').addEventListener('keydown', function(e){
+      if(e.keyCode == 13){
+        if (document.getElementById('deploy_msg').value) {
+            deployToServer(document.getElementById('deploy_msg').value);
+        }
+        deploy.style.display = 'none';
+      }
+
+      return false;
+    });
+
+
+    function deployToServer(msg) {
+        var filename = document.getElementById('filename').value,
+            postUrl = "/deploy/",
             payload = "&msg=" + msg;
 
         $.ajax({
